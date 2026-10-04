@@ -175,6 +175,24 @@ codex
 
 Codex App 也可以使用同一份生成的 Codex 配置。
 
+#### 允许写文件（`sandbox_mode`）
+
+Codex 的工具运行在沙箱中，沙箱默认是 `read-only`，因此刚生成的配置可以读取你的项目，却无法创建或修改文件：`apply_patch` 与 shell 写入（`echo > file`）都会以 “The filesystem is read-only” 失败，与模型能力无关。
+
+要允许 Codex 写文件，请在 `$CODEX_HOME_DIR/config.toml` 中设置 `sandbox_mode`。配置项名称是 `sandbox_mode`（不是 `sandbox`）：
+
+```toml
+sandbox_mode = "workspace-write"
+```
+
+可选值：
+
+- `read-only`（默认）——禁止一切文件修改。
+- `workspace-write`——允许在工作区、`/tmp` 以及 memories 目录中写入。
+- `danger-full-access`——不限制磁盘写入，请谨慎使用。
+
+第 5 步的命令会重新生成 `config.toml`，因此每次重新生成后都要再次加上 `sandbox_mode`（或恢复你自己保存的副本）。
+
 #### 一键启动脚本
 
 Moon Bridge 提供了面向 Codex CLI 的辅助脚本，可以一键构建并启动代理、生成 Codex 配置并启动 Codex：
@@ -231,6 +249,7 @@ curl http://127.0.0.1:38440/v1/responses \
 - 配置加载失败且提示 `field provider not found`：你使用的是旧版 `provider.providers` 配置；当前格式是顶层 `providers`、`models`、`routes`、`defaults`。
 - `401` 或认证失败：检查 `config.yml` 中的 DeepSeek API Key 是否正确。
 - `402` 或余额错误：检查 DeepSeek 开放平台账户余额。
+- 提示 `The filesystem is read-only` 或 `apply_patch` 无法写文件：说明未设置 `sandbox_mode`，Codex 默认使用 `read-only`。请在 `config.toml` 中设置 `sandbox_mode = "workspace-write"`（见 [允许写文件](#允许写文件sandbox_mode)）。
 - 图片输入失败：如果启用了 Visual 扩展，需要单独配置视觉 Provider（如 Kimi）的 API Key。你可以配置该 Provider，或移除 `visual.enabled: true` 来禁用 Visual 扩展。
 
 #### 相关资源

@@ -175,6 +175,24 @@ Codex now sends OpenAI Responses requests to Moon Bridge, and Moon Bridge routes
 
 Codex App can use the same generated Codex configuration.
 
+#### Allow File Writes (`sandbox_mode`)
+
+Codex runs its tools inside a sandbox that defaults to `read-only`, so a freshly generated config can read your project but cannot create or edit files: `apply_patch` and shell writes (`echo > file`) fail with "The filesystem is read-only", no matter how capable the model is.
+
+To let Codex write files, set `sandbox_mode` in `$CODEX_HOME_DIR/config.toml`. The key is `sandbox_mode` (not `sandbox`):
+
+```toml
+sandbox_mode = "workspace-write"
+```
+
+Valid values:
+
+- `read-only` (default) — no file mutations.
+- `workspace-write` — allow writes in the workspace, `/tmp`, and the memories directory.
+- `danger-full-access` — unrestricted disk writes; use with care.
+
+The step 5 commands regenerate `config.toml`, so re-add `sandbox_mode` (or restore your saved copy) each time you regenerate it.
+
 #### One-Command Launcher
 
 Moon Bridge provides a helper script for Codex CLI that can build and start the proxy, generate the Codex config, and launch Codex in one command:
@@ -231,6 +249,7 @@ curl http://127.0.0.1:38440/v1/responses \
 - Config loading fails with `field provider not found`: you are using the old `provider.providers` format. The current format uses top-level `providers`, `models`, `routes`, and `defaults`.
 - `401` or authentication errors: check the DeepSeek API key in `config.yml`.
 - `402` or payment errors: check your DeepSeek Platform balance.
+- `The filesystem is read-only` or `apply_patch` cannot write files: `sandbox_mode` is unset, so Codex defaults to `read-only`. Set `sandbox_mode = "workspace-write"` in `config.toml` (see [Allow File Writes](#allow-file-writes-sandbox_mode)).
 - Image input fails: if you enabled the Visual extension, configure a separate visual provider (e.g., Kimi) with its API key. You can configure that provider, or remove `visual.enabled: true` to disable the Visual extension.
 
 #### Resources
